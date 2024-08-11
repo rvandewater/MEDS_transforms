@@ -67,7 +67,7 @@ def stage_init(cfg: DictConfig) -> tuple[Path, Path, Path]:
 
     Returns: The data input directory, stage output directory, and metadata input directory.
     """
-    hydra_loguru_init()
+    hydra_loguru_init(worker=cfg.get("worker", None))
 
     logger.info(
         f"Running {current_script_name()} with the following configuration:\n{OmegaConf.to_yaml(cfg)}"
@@ -365,15 +365,29 @@ OmegaConf.register_new_resolver("populate_stage", populate_stage, replace=False)
 OmegaConf.register_new_resolver("get_package_version", get_package_version, replace=False)
 OmegaConf.register_new_resolver("get_package_name", get_package_name, replace=False)
 
+LOGURU_FORMAT = [
+    "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | ",
+    "<level>{level: <8}</level> | ",
+    "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - " "<level>{message}</level>",
+]
 
-def hydra_loguru_init() -> None:
+
+def hydra_loguru_init(worker: int | None = None) -> None:
     """Adds loguru output to the logs that hydra scrapes.
 
     Must be called from a hydra main!
     """
     hydra_path = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
     logfile_name = hydra.core.hydra_config.HydraConfig.get().job.name
-    logger.add(os.path.join(hydra_path, f"{logfile_name}.log"))
+
+    if worker is None:
+        fmt = "".join(LOGURU_FORMAT)
+    else:
+        fmt = "".join([f"<magenta>W{worker}</magenta> | "] + LOGURU_FORMAT)
+
+    logger.remove()
+    logger.add(os.path.join(hydra_path, f"{logfile_name}.log"), format=fmt)
+    logger.add(sys.stderr, format=fmt)
 
 
 def get_shard_prefix(base_path: Path, fp: Path) -> str:

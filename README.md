@@ -36,7 +36,7 @@ Examples of these capabilities in action can be seen in a few places:
 - To support cluster-based parallelism, install the optional submitit dependencies with
     `pip install MEDS-transforms[slurm_parallelism]`.
 - For working on development, install the optional development dependencies with
-    `pip install .[dev,tests]`.
+    `pip install '.[dev,tests]'`.
 - Optional dependencies can be mutually installed by combining the optional dependency names with commas in
     the square brackets, e.g., `pip install MEDS-transforms[examples,local_parallelism]`.
 
